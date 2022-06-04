@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"python.pythonPath": "/System/Library/Frameworks/Python.framework/Versions/2.7/Resources/Python.app/Contents/MacOS/Python",
+		"git.ignoreLimitWarning": true,
+		"editor.wordWrap": "off",
+		"editor.wordWrapColumn": 80,
+		"[markdown]": {
+			"editor.wordWrap": "on",
+			"editor.wordWrapColumn": 80,
+			"editor.quickSuggestions": false
+		},
+		"jupyter.jupyterServerType": "local"
+	}
+}
