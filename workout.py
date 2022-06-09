@@ -16,29 +16,38 @@ def main():
     con = sqlite3.connect(f"{PATH}silver.sqlite")
     cursor = con.cursor()
 
-    #st.write(get_full_table(con))
+    st.write(get_flat_table(con))
 
     # Get workout names
     cursor.execute("SELECT DISTINCT(Workout_Name) FROM Workout_Set")
     workout_names = cursor.fetchall()
     df_workout_names = pd.DataFrame(workout_names)
-    st.write(workout_names[0][0])
 
+    col1, col2, col3, = st.columns((1,1,1))
+    col1.write("#### Workout")
+    col2.write("#### Last")
+    col3.write("#### Add")
 
     col1, col2, col3, col4, col5, col6 = st.columns((1,1,1,1,1,1))
-    col1.write("Workout")
-    col2.write("Last workout")
-    col3.write("Date")
-    col5.write("Weight")
-    col1_workout, col2_last, col3_date, col4_x, col5_x, col6_x = st.columns((1,1,1,1,1,1))
+    col2.write("#### Latest")
+    col3.write("#### Weight")
+    col4.write("#### Reps")
+    col5.write("#### Weight")
+    col6.write("#### Reps")
+    col1_workout, col2_latest, col3_weight, col4_reps, col5_weight_add, col6_x = st.columns((1,1,1,1,1,1))
 
 
 
     for workout_name in workout_names:
+        last_workout_date, df_last_workout = get_last_workout(workout_name[0], con)
         col1_workout.write(workout_name[0])
-        df_last_workout = get_last_workout(workout_name[0], con)
-        st.write(df_last_workout)
-
+        col2_latest.write(last_workout_date)
+        col3_weight.write(df_last_workout[0][1])
+        col4_reps.write(df_last_workout[0][2])
+        try:
+            col5_weight_add.number_input('', min_value=0, value=int(df_last_workout[0][1]), key=workout_name[0])
+        except Exception:
+            pass
     con.close()
 
 
@@ -59,6 +68,15 @@ def get_full_table(con):
 
     return df_full_table
 
+def get_flat_table(con):
+
+    df_full_table = get_full_table(con)
+    df_full_table = df_full_table.drop(columns=['SetID', 'WorkoutID'])
+    return df_full_table.pivot_table(index=['Date', 'Weight'], 
+                                     values='Reps', 
+                                     columns='Workout_Name', 
+                                     aggfunc='size')
+
 def get_last_workout(workout_name, con):
     cur = con.cursor()
     query = "SELECT Workout_Volume.WorkoutID, MAX(Date) \
@@ -69,7 +87,9 @@ def get_last_workout(workout_name, con):
              ON Workout_Volume.WorkoutID = Dates.WorkoutID \
              WHERE Workout_Name=:workout_name"
     cur.execute(query, {'workout_name': workout_name})
-    last_workoutID = cur.fetchall()[0][0]
+    temp = cur.fetchall()
+    last_workoutID = temp[0][0]
+    last_workout_date = temp[0][1]
 
     query = "SELECT Workout_Name, Weight, Reps \
              FROM Workout_Volume \
@@ -79,7 +99,15 @@ def get_last_workout(workout_name, con):
              AND Workout_Name=:workout_name"
     cur.execute(query, {'workoutID': last_workoutID, 'workout_name': workout_name})
 
-    return cur.fetchall()
+    return last_workout_date, cur.fetchall()
 
 if __name__ == '__main__':
     main()
+    padding = 3
+    st.markdown(f""" <style>
+        .reportview-container .main .block-container{{
+            padding-top: {padding}rem;
+            padding-right: {padding}rem;
+            padding-left: {padding}rem;
+            padding-bottom: {padding}rem;
+        }} </style> """, unsafe_allow_html=True)
