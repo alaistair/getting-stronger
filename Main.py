@@ -140,7 +140,6 @@ def show_barbell_weight_allocation(weight_set_to_use_full):
                                                 "Right":[],
                                                 "Total weight":[]})
 
-
     for weight, number in weight_set_to_use_full.items():
         if number > 0:
             #col2.write(f"{str(weight)} weight {str(number)}")
