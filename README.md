@@ -1,0 +1,1 @@
+Tracking strength training with a Streamlit frontend and SQLite backend
