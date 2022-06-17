@@ -11,7 +11,7 @@ def main():
     st.set_page_config(layout="wide")
 
     # Load silver SQLite database
-    PATH = '/Users/alaistairchan/Dropbox/Workout/data/silver/'
+    PATH = './data/silver/'
     con = sqlite3.connect(f"{PATH}silver.sqlite")
 
     workout_names = get_workout_names(con)

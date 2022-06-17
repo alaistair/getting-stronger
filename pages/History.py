@@ -9,7 +9,7 @@ def main():
     st.set_page_config(layout="wide")
 
     # Load silver SQLite database
-    PATH = '/Users/alaistairchan/Dropbox/Workout/data/silver/'
+    PATH = './data/silver/'
     con = sqlite3.connect(f"{PATH}silver.sqlite")
     workout_names = get_workout_names(con)
 
@@ -77,7 +77,7 @@ def get_last_workout(workout_name, con):
     cur.execute(query, {'workoutID': last_workoutID, 'workout_name': workout_name})
 
     return last_workout_date, cur.fetchall()
-    
+
 def get_workout_names(con):
     cursor = con.cursor()
     cursor.execute("SELECT DISTINCT(Workout_Name) FROM Workout_Set")
