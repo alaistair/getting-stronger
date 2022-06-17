@@ -1,4 +1,3 @@
-import altair as alt
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -19,7 +18,6 @@ def main():
     col1, _, col2 = st.columns((1, 0.2, 1))
 
     with st.sidebar:
-        st.write("test")
         workout_name = st.radio('', workout_names)
 
 
@@ -37,36 +35,19 @@ def main():
     col1.button("Reset to last workout")
 
 
-    col2.write("### Barbell weight allocation")
-    weight_bar = col2.number_input("Weight of bar", min_value=0, value=16)
+    col2.write("#### Barbell weight allocation")
+    barbell_weight_allocation = col2.empty()
+    barbell_weight_edit = col2.empty()
+
+    with barbell_weight_edit.expander("Edit weight set"):
+        weight_bar = st.number_input("Weight of bar", min_value=0, value=16)
 
     weight_set_full = {20.0: 2, 10.0: 2, 5.0: 2, 2.5: 2, 1.0: 2, 0.75: 2, 0.5: 2, 0.25:2}
     weight_set_to_use_full, weight_unallocated = calculate_barbell_weights(weight_to_lift, weight_set_full, weight_bar)
 
-    col2.write(show_barbell_weight_allocation(weight_set_to_use_full))
+    barbell_weight_allocation.write(show_barbell_weight_allocation(weight_set_to_use_full))
     if weight_unallocated != 0:
         col2.write(f"Unallocated {str(weight_unallocated)}")
-
-    with col2.expander("Edit weight set"):
-        st.write("test")
-
-
-    with st.expander("See all workouts"):
-        col1, col2, col3, col4 = st.columns((1,1,1,1))
-        col1.write("#### Workout")
-        col2.write("#### Latest")
-        col3.write("#### Weight")
-        col4.write("#### Reps")
-
-        for workout_name in workout_names:
-            last_workout_date, df_last_workout = get_last_workout(workout_name, con)
-            col1.write(workout_name)
-            col2.write(last_workout_date)
-            col3.write(df_last_workout[0][1])
-            col4.write(df_last_workout[0][2])
-
-    with st.expander("See history"):
-        st.write(get_flat_table(con))
 
     con.close()
 
@@ -120,30 +101,6 @@ def weight_allocate_test(weight_set_full, weight_bar):
 
 def highlight_unallocated(s):
     return ['background-color: red']*len(s) if s.Unallocated else ['background-color: white']*len(s)
-
-def get_full_table(con):
-    df_dates = pd.read_sql_query("SELECT * FROM Dates", con).drop(columns=['index'])
-    df_workout_set = pd.read_sql_query("SELECT * FROM Workout_Set", con).drop(columns=['index'])
-    df_workout_volume = pd.read_sql_query("SELECT * FROM Workout_Volume", con).drop(columns=['index'])
-
-    df_full_table = pd.merge(df_workout_set, 
-                             df_workout_volume, 
-                             how='left',
-                             on='SetID')
-    df_full_table = pd.merge(df_full_table,
-                             df_dates,
-                             how='left',
-                             on='WorkoutID')
-    return df_full_table
-
-def get_flat_table(con):
-
-    df_full_table = get_full_table(con)
-    df_full_table = df_full_table.drop(columns=['SetID', 'WorkoutID'])
-    return df_full_table.pivot_table(index=['Date', 'Weight'], 
-                                     values='Reps', 
-                                     columns='Workout_Name', 
-                                     aggfunc='size')
 
 def get_last_workout(workout_name, con):
     cur = con.cursor()
