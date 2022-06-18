@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import sqlite3
-
+from datetime import datetime
 
 def main():
     st.set_page_config(layout="wide")
@@ -12,6 +12,11 @@ def main():
     PATH = './data/silver/'
     con = sqlite3.connect(f"{PATH}silver.sqlite")
     workout_names = get_workout_names(con)
+
+    workout_dates = get_full_table(con)[['Date']]
+    chart = workout_chart(workout_dates)
+    st.altair_chart(chart)
+
 
     with st.expander("See history"):
         st.write(get_flat_table(con))
@@ -29,6 +34,27 @@ def main():
             col2.write(last_workout_date)
             col3.write(df_last_workout[0][1])
             col4.write(df_last_workout[0][2])
+
+
+def workout_chart(workout_dates):
+    # Convert datetime to date
+    workout_dates['Date'] = workout_dates.applymap(lambda x: datetime.strptime(x, "%Y-%m-%d %H:%M:%S").date())
+    # Count sets
+    workout_dates = workout_dates.groupby(workout_dates['Date']).size().reset_index(name='Count')
+    # Add weekday column
+    workout_dates['Day of week'] = workout_dates['Date'].map(lambda x: x.weekday()+1)
+
+    chart = alt.Chart(workout_dates).mark_rect().encode(
+        y=alt.Y('yearmonthdate(Date):O'),
+        x=alt.X('Day of week:O'),
+        color=alt.Color('Count:Q', scale=alt.Scale(scheme="inferno"), sort="descending"),
+    )
+
+    return chart
+
+
+def day_of_week(date):
+    return date.datetime.weekday()
 
 
 def get_full_table(con):
@@ -54,6 +80,7 @@ def get_flat_table(con):
                                      values='Reps', 
                                      columns='Workout_Name', 
                                      aggfunc='size')
+
 def get_last_workout(workout_name, con):
     cur = con.cursor()
     query = "SELECT Workout_Volume.WorkoutID, MAX(Date) \

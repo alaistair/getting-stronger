@@ -38,11 +38,13 @@ def main():
     col2.write("#### Barbell weight allocation")
     barbell_weight_allocation = col2.empty()
     barbell_weight_edit = col2.empty()
+    weight_set_full = {20.0: 2, 10.0: 2, 5.0: 2, 2.5: 2, 1.0: 2, 0.75: 2, 0.5: 2, 0.25:2}
 
     with barbell_weight_edit.expander("Edit weight set"):
         weight_bar = st.number_input("Weight of bar", min_value=0, value=16)
+        for weight, number in weight_set_full.items():
+            number = st.number_input(str(weight)+" kg", min_value=0, value=number)
 
-    weight_set_full = {20.0: 2, 10.0: 2, 5.0: 2, 2.5: 2, 1.0: 2, 0.75: 2, 0.5: 2, 0.25:2}
     weight_set_to_use_full, weight_unallocated = calculate_barbell_weights(weight_to_lift, weight_set_full, weight_bar)
 
     barbell_weight_allocation.write(show_barbell_weight_allocation(weight_set_to_use_full))
@@ -143,9 +145,9 @@ def show_barbell_weight_allocation(weight_set_to_use_full):
     for weight, number in weight_set_to_use_full.items():
         if number > 0:
             #col2.write(f"{str(weight)} weight {str(number)}")
-            df_temp = pd.DataFrame({"Left":[number/2],
+            df_temp = pd.DataFrame({"Left":[int(number/2)],
                                                 "Plate":[weight],
-                                                "Right":[number/2],
+                                                "Right":[int(number/2)],
                                                 "Total weight":[number * weight]})
             df_barbell_weight_allocation = pd.concat([df_barbell_weight_allocation, df_temp], ignore_index=True)
             
