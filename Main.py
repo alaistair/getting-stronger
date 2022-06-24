@@ -9,7 +9,7 @@ import json
 
 def main():
     st.set_page_config(layout="wide")
-
+    
     # Load silver SQLite database
     PATH = './data/silver/'
     con = sqlite3.connect(f"{PATH}silver.sqlite")
@@ -18,8 +18,9 @@ def main():
     col1, _, col2 = st.columns((1, 0.2, 1))
 
     with st.sidebar:
+        st.write('# Select a workout')
         workout_name = st.radio('', workout_names)
-
+        st.button("Add new")
 
     last_workout_str, df_last_workout = get_last_workout(workout_name, con)
     last_workout_date = datetime.datetime.strptime(last_workout_str, "%Y-%m-%d %H:%M:%S")
@@ -32,7 +33,7 @@ def main():
     weight_to_lift = col1.number_input("Weight", min_value=0, value=int(df_last_workout[0][1]), key=workout_name[0] + 'weight')
     reps = col1.number_input('Reps', min_value=0, value=int(df_last_workout[0][2]), key=workout_name[0])
     col1.button("Add set")
-    col1.button("Reset to last workout")
+    col1.button("Reset to previous workout")
 
 
     col2.write("#### Barbell weight allocation")

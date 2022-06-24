@@ -14,6 +14,7 @@ def main():
     workout_names = get_workout_names(con)
 
     workout_dates = get_full_table(con)[['Date']]
+
     chart = workout_chart(workout_dates)
     st.altair_chart(chart)
 
@@ -45,9 +46,10 @@ def workout_chart(workout_dates):
     workout_dates['Day of week'] = workout_dates['Date'].map(lambda x: x.weekday()+1)
 
     chart = alt.Chart(workout_dates).mark_rect().encode(
-        y=alt.Y('yearmonthdate(Date):O'),
+        y=alt.Y('yearweek(Date):O'),
         x=alt.X('Day of week:O'),
         color=alt.Color('Count:Q', scale=alt.Scale(scheme="inferno"), sort="descending"),
+        tooltip=['Date', 'Count']
     )
 
     return chart
