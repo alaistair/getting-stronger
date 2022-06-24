@@ -1,11 +1,13 @@
-import pandas as pd
+import altair as alt
 import numpy as np
+import pandas as pd
 import streamlit as st
 import os
 import re
 import sqlite3
 import datetime
 import json
+
 
 def main():
     st.set_page_config(layout="wide")
@@ -36,7 +38,6 @@ def main():
     col1.button("Reset to previous workout")
 
 
-    col2.write("#### Barbell weight allocation")
     barbell_weight_allocation = col2.empty()
     barbell_weight_edit = col2.empty()
     weight_set_full = {20.0: 2, 10.0: 2, 5.0: 2, 2.5: 2, 1.0: 2, 0.75: 2, 0.5: 2, 0.25:2}
@@ -47,10 +48,27 @@ def main():
             number = st.number_input(str(weight)+" kg", min_value=0, value=number)
 
     weight_set_to_use_full, weight_unallocated = calculate_barbell_weights(weight_to_lift, weight_set_full, weight_bar)
+    df_barbell_weight_allocation = show_barbell_weight_allocation(weight_set_to_use_full)
 
-    barbell_weight_allocation.write(show_barbell_weight_allocation(weight_set_to_use_full))
+
     if weight_unallocated != 0:
         col2.write(f"Unallocated {str(weight_unallocated)}")
+
+
+
+    chart = alt.Chart(df_barbell_weight_allocation).mark_bar().encode(
+        x=alt.X('Plate:N', sort=df_barbell_weight_allocation['Plate'].to_list(), axis=alt.Axis(labelAngle=0), title='Barbell weight allocation'),
+        y=alt.Y('Weight:Q', axis=None),
+        tooltip=['Weight']
+    ).configure_axis(
+        grid=False
+    ).configure_view(
+        strokeWidth=0
+    )
+
+
+    barbell_weight_allocation.altair_chart(chart, use_container_width=True)
+
 
     con.close()
 
@@ -136,26 +154,34 @@ def get_workout_names(con):
     # Flatten nested list
     return [element for sublist in workout_names for element in sublist]
 
+
 def show_barbell_weight_allocation(weight_set_to_use_full):
 
-    df_barbell_weight_allocation = pd.DataFrame({"Left":[],
-                                                "Plate":[],
-                                                "Right":[],
-                                                "Total weight":[]})
+    df_barbell_weight_allocation = pd.DataFrame({"Plate":[],
+                                                "Weight":[]})
 
+    # One half of barbell
     for weight, number in weight_set_to_use_full.items():
         if number > 0:
-            #col2.write(f"{str(weight)} weight {str(number)}")
-            df_temp = pd.DataFrame({"Left":[int(number/2)],
-                                                "Plate":[weight],
-                                                "Right":[int(number/2)],
-                                                "Total weight":[number * weight]})
+            df_temp = pd.DataFrame({"Plate":[weight],
+                                    "Weight":[weight]})
             df_barbell_weight_allocation = pd.concat([df_barbell_weight_allocation, df_temp], ignore_index=True)
             
+    # Other half
+    df_temp = df_barbell_weight_allocation.sort_values(by=["Plate"])
+    df_temp["Plate"] = -df_temp["Plate"]
+    df_temp["Plate"] = df_temp["Plate"].astype(str)
+    df_barbell_weight_allocation["Plate"] = df_barbell_weight_allocation["Plate"].astype(str)
 
-    return df_barbell_weight_allocation#.reset_index()
+    # Bar
+    barbell = pd.DataFrame({"Plate":["bar"],
+                            "Weight":[16]})
+
+    df_temp = pd.concat([df_temp, barbell], ignore_index=True)
+    df_barbell_weight_allocation = pd.concat([df_temp, df_barbell_weight_allocation], ignore_index=True)
 
 
+    return df_barbell_weight_allocation
 
 
 
