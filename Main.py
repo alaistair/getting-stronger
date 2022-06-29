@@ -44,6 +44,7 @@ def main():
 
     with barbell_weight_edit.expander("Edit weight set"):
         weight_bar = st.number_input("Weight of bar", min_value=0, value=16)
+        st.write("###### Plates")
         for weight, number in weight_set_full.items():
             number = st.number_input(str(weight)+" kg", min_value=0, value=number)
 
