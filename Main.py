@@ -126,24 +126,27 @@ def highlight_unallocated(s):
 
 def get_last_workout(workout_name, con):
     cur = con.cursor()
-    query = "SELECT Workout_Volume.WorkoutID, MAX(Date) \
-             FROM Workout_Volume \
-             LEFT JOIN Workout_Set \
-             ON Workout_Volume.SetID = Workout_Set.SetID\
+
+    # Get last date of particular workout
+    query = "SELECT Dates.WorkoutID, MAX(Date) \
+             FROM Workout_Set \
              LEFT JOIN Dates \
-             ON Workout_Volume.WorkoutID = Dates.WorkoutID \
+             ON Workout_Set.SetID = Dates.SetID \
              WHERE Workout_Name=:workout_name"
+
     cur.execute(query, {'workout_name': workout_name})
     temp = cur.fetchall()
     last_workoutID = temp[0][0]
     last_workout_date = temp[0][1]
 
+    # Get details of latest workout
     query = "SELECT Workout_Name, Weight, Reps \
-             FROM Workout_Volume \
-             LEFT JOIN Workout_Set \
-             ON Workout_Volume.SetID = Workout_Set.SetID \
+             FROM Workout_Set \
+             LEFT JOIN Dates \
+             ON Workout_Set.SetID = Dates.SetID \
              WHERE WorkoutID=:workoutID \
              AND Workout_Name=:workout_name"
+
     cur.execute(query, {'workoutID': last_workoutID, 'workout_name': workout_name})
 
     return last_workout_date, cur.fetchall()
@@ -154,7 +157,6 @@ def get_workout_names(con):
     workout_names = cursor.fetchall()
     # Flatten nested list
     return [element for sublist in workout_names for element in sublist]
-
 
 def show_barbell_weight_allocation(weight_set_to_use_full):
 
@@ -180,7 +182,6 @@ def show_barbell_weight_allocation(weight_set_to_use_full):
 
     df_temp = pd.concat([df_temp, barbell], ignore_index=True)
     df_barbell_weight_allocation = pd.concat([df_temp, df_barbell_weight_allocation], ignore_index=True)
-
 
     return df_barbell_weight_allocation
 
